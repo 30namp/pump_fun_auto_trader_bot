@@ -1,0 +1,16 @@
+{
+  "name": "back_end",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "clear-wallet": "node clearWallet.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0"
+  }
+}

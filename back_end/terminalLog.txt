@@ -1,0 +1,138 @@
+➜  back_end git:(master) ✗ npm start
+
+> back_end@1.0.0 start
+> node index.js
+
+(node:57419) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Wallet balance in SOL: 0.029514858
+[ PUMP ] connected to websocket!
+MEMORY: [ CONTRACTS: 0 ] -- [ BUY_TRX: 0 ] -- [ SELL_TRX: 0 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+MEMORY: [ CONTRACTS: 1 ] -- [ BUY_TRX: 0 ] -- [ SELL_TRX: 0 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+MEMORY: [ CONTRACTS: 1 ] -- [ BUY_TRX: 2 ] -- [ SELL_TRX: 0 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+MEMORY: [ CONTRACTS: 3 ] -- [ BUY_TRX: 4 ] -- [ SELL_TRX: 0 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+[ 🚀 SEND_TRANSACTION ] payload:  {
+  action: 'buy',
+  mint: '2b9F131BmMGuS3MFfprM2j8waa2huyisn9MsB1sTpump',
+  amount: 0.00001,
+  denominatedInSol: 'true',
+  slippage: 2,
+  priorityFee: 0.000005,
+  pool: 'pump'
+}
+MEMORY: [ CONTRACTS: 5 ] -- [ BUY_TRX: 7 ] -- [ SELL_TRX: 0 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+--> transaction not found, trying again! signature:  kU7uScDo7SQzBPwVLWrB5w6optyAEARnrKPYsnYGEJ7VDGeAzhdKF5HwvJBkSKz9dFGy2fgTCS57f6eigVTtrtz
+MEMORY: [ CONTRACTS: 6 ] -- [ BUY_TRX: 15 ] -- [ SELL_TRX: 2 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+MEMORY: [ CONTRACTS: 6 ] -- [ BUY_TRX: 23 ] -- [ SELL_TRX: 2 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+--> transaction:  {
+  blockTime: 1739577997,
+  meta: {
+    computeUnitsConsumed: 88401,
+    err: null,
+    fee: 6500,
+    innerInstructions: [ [Object], [Object] ],
+    loadedAddresses: { readonly: [], writable: [] },
+    logMessages: [
+      'Program ComputeBudget111111111111111111111111111111 invoke [1]',
+      'Program ComputeBudget111111111111111111111111111111 success',
+      'Program ComputeBudget111111111111111111111111111111 invoke [1]',
+      'Program ComputeBudget111111111111111111111111111111 success',
+      'Program 11111111111111111111111111111111 invoke [1]',
+      'Program 11111111111111111111111111111111 success',
+      'Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [1]',
+      'Program log: CreateIdempotent',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]',
+      'Program log: Instruction: GetAccountDataSize',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1569 of 104145 compute units',
+      'Program return: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA pQAAAAAAAAA=',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success',
+      'Program 11111111111111111111111111111111 invoke [2]',
+      'Program 11111111111111111111111111111111 success',
+      'Program log: Initialize the associated token account',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]',
+      'Program log: Instruction: InitializeImmutableOwner',
+      'Program log: Please upgrade to SPL Token 2022 for immutable owner support',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1405 of 97558 compute units',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]',
+      'Program log: Instruction: InitializeAccount3',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4188 of 93676 compute units',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success',
+      'Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 20345 of 109550 compute units',
+      'Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success',
+      'Program FAdo9NCw1ssek6Z6yeWzWjhLVsr8uiCwcWNUnKgzTnHe invoke [1]',
+      'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [2]',
+      'Program log: Instruction: Buy',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]',
+      'Program log: Instruction: Transfer',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 42646 compute units',
+      'Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success',
+      'Program 11111111111111111111111111111111 invoke [3]',
+      'Program 11111111111111111111111111111111 success',
+      'Program 11111111111111111111111111111111 invoke [3]',
+      'Program 11111111111111111111111111111111 success',
+      'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [3]',
+      'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 2132 of 30076 compute units',
+      'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success',
+      'Program data: vdt/007mYe4XmsDE24RE4CK4p/57NrwgHK/fzC3C9ccuO5xZ+uk6rxAnAAAAAAAAMdZiEQAAAAABewcCVeJqN1bp4mcR+mHibAghg/uhj5jkoApUuFtfucGN2q9nAAAAABAgEbwHAAAA6ypwkEtxAwAQdO2/AAAAAOuSXUS6cgIA',
+      'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 38246 of 63986 compute units',
+      'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success',
+      'Program 11111111111111111111111111111111 invoke [2]',
+      'Program 11111111111111111111111111111111 success',
+      'Program FAdo9NCw1ssek6Z6yeWzWjhLVsr8uiCwcWNUnKgzTnHe consumed 67606 of 89205 compute units',
+      'Program FAdo9NCw1ssek6Z6yeWzWjhLVsr8uiCwcWNUnKgzTnHe success'
+    ],
+    postBalances: [
+        27455379,        6425870,
+         2039280, 35784067952734,
+      3221241920,        2039280,
+       804038296,              1,
+               1,      731913600,
+         1461600,      934087680,
+         1398960,      247137320,
+         1009200,      137104014,
+         1141440
+    ],
+    postTokenBalances: [ [Object], [Object] ],
+    preBalances: [
+        29514858,        6422370,
+               0, 35784067952634,
+      3221231920,        2039280,
+       804038197,              1,
+               1,      731913600,
+         1461600,      934087680,
+         1398960,      247137320,
+         1009200,      137104014,
+         1141440
+    ],
+    preTokenBalances: [ [Object] ],
+    rewards: [],
+    status: { Ok: null }
+  },
+  slot: 320703348,
+  transaction: {
+    message: MessageV0 {
+      header: [Object],
+      staticAccountKeys: [Array],
+      recentBlockhash: '7WwNXoNMj4hEvfoAh4D4a2WWoWeZYmUy9WoDp8dpwywD',
+      compiledInstructions: [Array],
+      addressTableLookups: []
+    },
+    signatures: [
+      'kU7uScDo7SQzBPwVLWrB5w6optyAEARnrKPYsnYGEJ7VDGeAzhdKF5HwvJBkSKz9dFGy2fgTCS57f6eigVTtrtz'
+    ]
+  },
+  version: 0
+}
+[ ✅ OPEN_POS ] mint: 2b9F131BmMGuS3MFfprM2j8waa2huyisn9MsB1sTpump signature: kU7uScDo7SQzBPwVLWrB5w6optyAEARnrKPYsnYGEJ7VDGeAzhdKF5HwvJBkSKz9dFGy2fgTCS57f6eigVTtrtz
+🛒 afterPurchase hit
+MEMORY: [ CONTRACTS: 7 ] -- [ BUY_TRX: 26 ] -- [ SELL_TRX: 2 ] -- [ OPEN_POS: 0 ] -- [ CLOSE_POS 0 ] -- [ FORCE_CLOSE_POS 0 ] -- [ FAIL_POS 0 ]
+[ 🚀 SEND_TRANSACTION ] payload:  {
+  action: 'sell',
+  mint: '2b9F131BmMGuS3MFfprM2j8waa2huyisn9MsB1sTpump',
+  amount: 199.18784081680033,
+  denominatedInSol: 'false',
+  slippage: 2,
+  priorityFee: 5.97563522450401,
+  pool: 'pump'
+}

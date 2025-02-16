@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  outline: none;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
