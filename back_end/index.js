@@ -10,6 +10,7 @@ const JsonFiles = {
 import { writeFileSync } from 'fs';
 import WebSocket from 'ws';
 import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import * as express from 'express';
 
 const contracts = {}, strategies = {}, fee = 0.000005;
 
@@ -130,8 +131,19 @@ class Contract {
 class PumpApi {
 
   ws = null;
+  status = 'off';
 
   constructor() { }
+
+  setStatus(status) {
+    if (!['on', 'off'].includes(status))
+      throw 'bot new status is not valid on pumpApi';
+    this.status = status;
+  }
+
+  getStatus() {
+    return this.status;
+  }
 
   setupWebSocket() {
     this.ws = new WebSocket('wss://pumpportal.fun/api/data');
@@ -141,9 +153,22 @@ class PumpApi {
     this.ws.on('close', () => { this.handleWsClose(); });
   }
 
-  handleWsOpen() {
-    console.log('[ PUMP ] connected to websocket!');
+  handleWsSleep() {
+    this.ws.send(JSON.stringify({ method: 'unsubscribeNewToken' }));
+    this.ws.send(JSON.stringify({ method: 'unsubscribeTokenTrade', keys: Object.values(contracts).map((contract) => (contract.getMint())) }));
+    this.setStatus('off');
+    console.log('[ PUMP ] ws Sleeped!');
+  }
+
+  handleWsWakeup() {
     this.ws.send(JSON.stringify({ method: 'subscribeNewToken' }));
+    this.setStatus('on');
+    console.log('[ PUMP ] ws Waked up!');
+  }
+
+  handleWsOpen() {
+    console.log('[ PUMP ] pumpportal ws opened!');
+    this.handleWsWakeup();
   }
 
   async handleWsUpdate(json) {
@@ -314,7 +339,7 @@ class Position {
 
 class Strategy {
 
-  isActive = true;
+  isActive = false;
   positions = [];
 
   name = '';
@@ -444,9 +469,8 @@ class Strategy {
   }
 }
 
-async function bot() {
+async function bot(pump) {
 
-  const pump = new PumpApi();
   pump.setupWebSocket();
 
   setInterval(async () => {
@@ -488,57 +512,84 @@ async function bot() {
 async function main() {
 
   await checkWalletBalance();
-  bot();
+  const pump = new PumpApi();
+  bot(pump);
 
-  // making websocket for front
-  const wss = new WebSocket.Server({ port: 1236 });
+  const app = express()
+  const port = 1236
 
-  console.log('server created, waiting for connection!');
-  wss.on('connection', function connection(ws) {
-
-    const wsInterval = setInterval(() => {
-      const stgs = [];
-      for (const strategyId of Object.keys(strategies)) {
-        const stg = { id: strategyId, config: JSON.parse(JSON.stringify(strategies[strategyId])), isActive: strategies[strategyId].isActive, positions: [], resultSol: 0, };
-        for (const position of strategies[strategyId].getPositions()) {
-          stg.positions.push({ ...JSON.parse(JSON.stringify(position)), resultSol: position.getResult() * position.openPrice, resultPercent: position.getResult(), }), stg.resultSol += (position.getResult() * position.openPrice);
-        }
-        stgs.push(stg);
+  app.get('/', (req, res) => {
+    const stgs = [];
+    for (const strategyId of Object.keys(strategies)) {
+      const stg = { id: strategyId, config: JSON.parse(JSON.stringify(strategies[strategyId])), isActive: strategies[strategyId].isActive, positions: [], resultSol: 0, };
+      for (const position of strategies[strategyId].getPositions()) {
+        stg.positions.push({ ...JSON.parse(JSON.stringify(position)), resultSol: position.getResult() * position.openPrice, resultPercent: position.getResult(), }), stg.resultSol += (position.getResult() * position.openPrice);
       }
-      ws.send(JSON.stringify({ ok: true, data: { strategies: stgs } }));
-    }, 1000);
+      stgs.push(stg);
+    }
+    res.send(JSON.stringify({ ok: true, data: { strategies: stgs, bot: { status: pump.getStatus() } } }));
+  });
 
-    ws.on('message', async function message(data) {
-      console.log('received: %s', data);
-      data = JSON.parse(data);
-      switch (data.query) {
-        case "activate-strategy": // [ id ]
-          if (!strategies[data.id]?.isActive)
-            strategies[data.id]?.activate();
-          break;
-        case "deactivate-strategy": // [ id ]
-          if (strategies[data.id]?.isActive)
-            strategies[data.id]?.deActivate();
-          break;
-        case "new-strategy": // [ id, config ] contains algo config
-          strategies[data.id] = new Strategy(data.config);
-          break;
-        case "edit-strategy": // [ id, config ]
-          strategies[data.id]?.setConfig(data.config);
-          break;
-        case "delete-strategy": // [ id ]
-          await strategies[data.id]?.deActivate();
-          delete strategies[data.id];
-          break;
-      }
-    });
+  app.get('/turn-off-bot', (req, res) => {
+    pump.handleWsSleep();
+    for (let stg of Object.keys(strategies))
+      stg.deActivate();
+    res.json({ ok: true });
+  });
 
-    // ws.send('something');
+  app.get('/turn-on-bot', (req, res) => {
+    pump.handleWsWakeup();
+    res.json({ ok: true });
+  });
 
-    ws.on('close', () => {
-      console.log('Client disconnected');
-      clearInterval(wsInterval);
-    });
+  app.get('/activate-strategy/:stgId', (req, res) => {
+    const stgId = req.params['stgId'];
+    if (!strategies[stgId]?.isActive)
+      strategies[stgId]?.activate();
+    res.json({ ok: true });
+  });
+
+  app.get('/deactivate-strategy/:stgId', (req, res) => {
+    const stgId = req.params['stgId'];
+    if (strategies[stgId]?.isActive)
+      strategies[stgId]?.deActivate();
+    res.json({ ok: true });
+  });
+
+  app.get('/new-strategy', (req, res) => {
+    const data = req.body;
+    try {
+      const stg = new Strategy(data.config);
+      strategies[data.id] = stg;
+      res.json({ ok: true });
+    } catch (e) {
+      res.json({ ok: false, msg: e.message, data: e });
+    }
+  });
+
+  app.get('/edit-strategy/:stgId', (req, res) => {
+    const stgId = req.params['stgId'];
+    try {
+      strategies[stgId]?.setConfig(data.config);
+      res.json({ ok: true });
+    } catch (e) {
+      res.json({ ok: false, msg: e.message, data: e });
+    }
+  });
+
+  app.get('/delete-strategy/:stgId', async (req, res) => {
+    const stgId = req.params['stgId'];
+    try {
+      await strategies[stgId]?.deActivate();
+      delete strategies[stgId];
+      res.json({ ok: true });
+    } catch (e) {
+      res.json({ ok: false, msg: e.message, data: e });
+    }
+  });
+
+  app.listen(port, () => {
+    console.log(`bot listening on port ${port}`);
   });
 
 }

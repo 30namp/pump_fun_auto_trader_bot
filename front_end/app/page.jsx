@@ -6,15 +6,15 @@ import { Button } from 'antd';
 import { DownOutlined, PercentageOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { message, Badge, Dropdown, Space, Table, Input, Switch, Divider, InputNumber, Drawer, Form } from 'antd';
 import { useEffect, useState } from 'react';
-import { Toaster, toast } from 'sonner'
+import { Toaster, toast } from 'sonner';
+
+const SERVER_IP = '194.5.193.129';
 
 function getRandomString(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
+  for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * charactersLength));
   return result;
 }
 
@@ -85,6 +85,9 @@ export default function Home() {
 
   const [form] = Form.useForm();
 
+  const [botStatus, setBotStatus] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
+
   const [messageApi, contextHolder] = message.useMessage();
 
   const [showStrategyForm, setShowStrategyForm] = useState(false);
@@ -92,7 +95,7 @@ export default function Home() {
 
   const [strategies, setStrategies] = useState([]);
 
-  let ws = new WebSocket('ws://localhost:1236');
+  let ws = new WebSocket(`ws://${SERVER_IP}:1236`);
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
@@ -135,14 +138,16 @@ export default function Home() {
 
     ws.onopen = () => {
       console.log('connected to bot!');
+      setWsConnected(true);
       toast.success('connected to bot!');
     };
 
     ws.onmessage = (msg) => {
       const json = msg.data;
       const obj = JSON.parse(json);
+      setBotStatus(obj.data.bot.status == 'on' ? true : false);
       setStrategies(obj.data.strategies);
-      console.log(obj.data.strategies);
+      console.log(obj.data);
     };
 
     ws.onclose = () => {
@@ -203,7 +208,20 @@ export default function Home() {
   return (
     <>
       {contextHolder}
-      <Button type='primary' className='self-start' onClick={() => (setShowStrategyForm(true))}>New Strategy</Button>
+      <div className='flex justify-between'>
+        <Button type='primary' className='self-start' onClick={() => (setShowStrategyForm(true))}>New Strategy</Button>
+        <div className="flex gap-4">
+          <p>Bot Status:</p>
+          <Switch value={botStatus} disabled={!wsConnected} onClick={() => {
+            if (ws) {
+              messageApi.info('changing bot status');
+              ws.send(JSON.stringify({
+                query: botStatus ? 'turn-off-bot' : 'turn-on-bot',
+              }));
+            }
+          }} />
+        </div>
+      </div>
       <Table
         className='min-w-[930px]'
         columns={columns}

@@ -1,0 +1,33 @@
+{
+  "pages": {
+    "/page": [
+      "static/chunks/[root of the server]__288fc8._.css",
+      "static/chunks/_6a46aa._.js",
+      "static/chunks/app_layout_jsx_61af54._.js",
+      "static/chunks/node_modules_antd_es_form_f6f696._.js",
+      "static/chunks/node_modules_antd_es_table_219710._.js",
+      "static/chunks/node_modules_antd_es_input_b731ff._.js",
+      "static/chunks/node_modules_antd_es_53bb77._.js",
+      "static/chunks/node_modules_@ant-design_cssinjs_es_49cd70._.js",
+      "static/chunks/node_modules_rc-menu_es_a9822e._.js",
+      "static/chunks/node_modules_@ant-design_icons_es_1cb7b5._.js",
+      "static/chunks/node_modules_rc-field-form_es_29709d._.js",
+      "static/chunks/node_modules_rc-table_es_23647e._.js",
+      "static/chunks/node_modules_rc-tree_es_28d1a5._.js",
+      "static/chunks/node_modules_rc-select_es_9bad84._.js",
+      "static/chunks/node_modules_@ant-design_5ded5e._.js",
+      "static/chunks/node_modules_@rc-component_e7adf9._.js",
+      "static/chunks/node_modules_bc9762._.js",
+      "static/chunks/app_page_jsx_bd719d._.js",
+      "static/chunks/app_page_jsx_e82780._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc._.js",
+      "static/chunks/node_modules_next_dist_compiled_107ce8._.js",
+      "static/chunks/node_modules_next_dist_client_523921._.js",
+      "static/chunks/node_modules_next_dist_4bb10e._.js",
+      "static/chunks/node_modules_@swc_helpers_cjs_00636a._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_d0a96d._.js",
+      "static/chunks/_e69f0d._.js",
+      "static/chunks/_d95469._.js"
+    ]
+  }
+}
