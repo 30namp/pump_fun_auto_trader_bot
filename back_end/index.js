@@ -15,6 +15,8 @@ import cors from 'cors';
 
 const contracts = {}, strategies = {}, fee = 0.000005;
 
+const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
+
 async function sleep(ms) {
   await new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -28,16 +30,12 @@ async function sleep(ms) {
 function getNowDateSecond() { return Math.floor(Date.now() / 1000); }
 
 async function checkWalletBalance() {
-  const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
   const publicKey = new PublicKey(PUBLIC_KEY);
   const balance = await connection.getBalance(publicKey);
   console.log("Wallet balance in SOL:", balance / LAMPORTS_PER_SOL);
 }
 
 async function checkTransactionStatus(signature) {
-  // Connect to the Solana mainnet (or devnet/testnet if needed)
-  const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-
   // Get the transaction status
   const status = await connection.getSignatureStatus(signature);
 
@@ -53,6 +51,28 @@ async function checkTransactionStatus(signature) {
       return await checkTransactionStatus(signature);
     }
   }
+}
+
+async function getBuyTransactionCount(mint) {
+  const mintPublicKey = new PublicKey(mint);
+  const signatures = await connection.getSignaturesForAddress(mintPublicKey, { limit: 1000 });
+
+  let buyTransactionCount = 0;
+
+  for (const { signature } of signatures) {
+    const transaction = await connection.getTransaction(signature, { commitment: "confirmed" });
+
+    if (transaction && transaction.meta && transaction.meta.postTokenBalances.length > 0) {
+      const preBalances = transaction.meta.preBalances;
+      const postBalances = transaction.meta.postBalances;
+
+      if (postBalances[0] > preBalances[0]) {
+        buyTransactionCount++;
+      }
+    }
+  }
+
+  return buyTransactionCount;
 }
 
 class Transaction {
@@ -349,7 +369,7 @@ class Strategy {
   name = '';
   amount = null;
 
-  purchaseOrder = true;
+  purchaseOrder = null;
   maxBuyOrderTokens = null;
   buySlippage = null;
   buyPositionFilters = { creatorAddMarketCap: 0, };
@@ -408,7 +428,13 @@ class Strategy {
       if (strategy.getPositions().filter((pos) => (pos.getMint() == contract.getMint() && ['inQueue', 'opening', 'open', 'closing'].includes(pos.getStatus()))).length) return false;
     }
 
-    if (this.purchaseOrder && contract.getLastTransaction().getType() != 'create') return false;
+    if (
+      this.purchaseOrder &&
+      (
+        contract.getTransactions().length - 1 >= this.purchaseOrder - 1 ||
+        getBuyTransactionCount(contract.getMint()) != this.purchaseOrder - 1
+      )
+    ) return false;
 
     if (this.positions.filter((pos) => (['inQueue', 'opening', 'open', 'closing'].includes(pos.getStatus()))).length >= this.maxBuyOrderTokens) return false;
     if (this.buyPositionFilters.creatorAddMarketCap && this.buyPositionFilters.creatorAddMarketCap > contract.getMarketCapSol()) return false;
@@ -539,8 +565,8 @@ async function main() {
 
   app.post('/turn-off-bot', (req, res) => {
     pump.handleWsSleep();
-    for (let stg of Object.keys(strategies))
-      stg.deActivate();
+    for (let stgId of Object.keys(strategies))
+      strategies[stgId].deActivate();
     res.json({ ok: true });
   });
 
@@ -551,9 +577,9 @@ async function main() {
 
   app.post('/activate-strategy/:stgId', (req, res) => {
     const stgId = req.params['stgId'];
-    if (!strategies[stgId]?.isActive)
-      strategies[stgId]?.activate();
-    res.json({ ok: true });
+    if (pump.getStatus() == 'on' && !strategies[stgId]?.isActive)
+      strategies[stgId]?.activate(), res.json({ ok: true });
+    else res.json({ ok: false, msg: 'the bot is off or the stg is already deactive!' });
   });
 
   app.post('/deactivate-strategy/:stgId', (req, res) => {
@@ -565,7 +591,6 @@ async function main() {
 
   app.post('/new-strategy', (req, res) => {
     const data = req.body;
-    console.log(req);
     try {
       const stg = new Strategy(data.config);
       strategies[data.id] = stg;

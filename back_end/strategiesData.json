@@ -1,1 +1,1 @@
-{"8Dxp1ODtxVgq9O2R3X6lnyAvVfFarPHwVRhTXEnvDLb9MToPFP":{"isActive":false,"positions":[],"name":"stg 1","amount":0.00001,"purchaseOrder":true,"maxBuyOrderTokens":2,"buySlippage":2,"buyPositionFilters":{"creatorAddMarketCap":30},"sellSlippage":2,"sellPositionFilters":{"afterPurchase":4,"target":30,"time":20},"stopLoss":{"target":10}}}
+{}

@@ -24,64 +24,13 @@ function generateStrategyId() {
   return getRandomString(50);
 }
 
-const items = [
-  { key: '1', label: 'Action 1' },
-  { key: '2', label: 'Action 2' },
-];
-
-const expandDataSource = Array.from({ length: 3 }).map((_, i) => ({
-  key: i.toString(),
-  date: '2014-12-24 23:12:00',
-  name: 'This is production name',
-  upgradeNum: 'Upgraded: 56',
-}));
-
-const dataSource = Array.from({ length: 3 }).map((_, i) => ({
-  key: i.toString(),
-  name: 'Screen',
-  platform: 'iOS',
-  version: '10.3.4.5654',
-  upgradeNum: 500,
-  creator: 'Jack',
-  createdAt: '2014-12-24 23:12:00',
-}));
-
 const expandColumns = [
-  { title: 'Date', dataIndex: 'date', key: 'date' },
-  { title: 'Name', dataIndex: 'name', key: 'name' },
-  {
-    title: 'Status',
-    key: 'state',
-    render: () => <Badge status="success" text="Finished" />,
-  },
-  { title: 'Upgrade Status', dataIndex: 'upgradeNum', key: 'upgradeNum' },
-  {
-    title: 'Action',
-    key: 'operation',
-    render: () => (
-      <Space size="middle">
-        <a>Pause</a>
-        <a>Stop</a>
-        <Dropdown menu={{ items }}>
-          <a>
-            More <DownOutlined />
-          </a>
-        </Dropdown>
-      </Space>
-    ),
-  },
+  { title: 'mint', dataIndex: 'mint', key: 'mint' },
+  { title: 'priorityFee', dataIndex: 'priorityFee', key: 'priorityFee' },
+  { title: 'openPrice', dataIndex: 'openPrice', key: 'openPrice' },
+  { title: 'closePrice', dataIndex: 'closePrice', key: 'closePrice' },
+  { title: 'status', dataIndex: 'status', key: 'status', render: (_, record) => <Badge text={record.status} />, },
 ];
-
-const expandedRowRender = (row) => {
-
-  return (
-    <Table
-      columns={expandColumns}
-      dataSource={expandDataSource}
-      pagination={false}
-    />
-  )
-};
 
 export default function Home() {
 
@@ -97,6 +46,28 @@ export default function Home() {
   const [strategies, setStrategies] = useState([]);
 
   let apiUrl = `http://${SERVER_IP}:1236`;
+
+  const expandedRowRender = (row) => {
+    const stgId = row.id;
+    const positions = strategies.find((stg) => (stg.id == stgId)).positions.map(
+      (pos) => ({
+        key: pos.signature,
+        mint: pos.mint,
+        priorityFee: pos.priorityFee,
+        openPrice: pos.openPrice,
+        closePrice: pos.closePrice,
+        status: pos.status,
+      })
+    );
+
+    return (
+      <Table
+        columns={expandColumns}
+        dataSource={positions}
+        pagination={false}
+      />
+    )
+  };
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
@@ -119,13 +90,13 @@ export default function Home() {
               }
             });
           }} />
-          <Switch defaultChecked={record.isActive} onClick={() => {
+          <Switch checked={record.isActive} onClick={() => {
             axios.post(`${apiUrl}/${record.isActive ? 'deactivate-strategy' : 'activate-strategy'}/${record.id}`).then((res) => {
               res = res.data;
               if (res.ok) {
                 messageApi.success('strategy updated!');
               } else {
-                messageApi.success('error happened!');
+                messageApi.error(res?.msg ?? 'error happened!');
                 console.log(res);
               }
             });
@@ -186,7 +157,7 @@ export default function Home() {
       if (res.ok) {
         messageApi.success('strategy saved!');
       } else {
-        messageApi.success('error happened!');
+        messageApi.error('error happened!');
         console.log(res);
       }
     });
@@ -205,9 +176,9 @@ export default function Home() {
             axios.post(`${apiUrl}/${botStatus == 'on' ? 'turn-off-bot' : 'turn-on-bot'}/`).then((res) => {
               res = res.data;
               if (res.ok) {
-                messageApi.info('changing bot status');
+                messageApi.success('changing bot status');
               } else {
-                messageApi.info('error happened!');
+                messageApi.error('error happened!');
                 console.log(res);
               }
             });
@@ -217,13 +188,13 @@ export default function Home() {
       <Table
         className='min-w-[930px]'
         columns={columns}
-        // expandable={{ expandedRowRender, defaultExpandedRowKeys: [] }}
+        expandable={{ expandedRowRender, defaultExpandedRowKeys: [] }}
         dataSource={strategies.map((stg) => ({
           key: stg.id,
           id: stg.id,
           name: stg.config.name,
           amount: stg.config.amount,
-          purchaseOrder: stg.config.purchaseOrder ? 'yes' : 'no',
+          purchaseOrder: stg.config.purchaseOrder,
           resultSol: Number.parseFloat(stg.resultSol),
           maxBuyOrderTokens: stg.config.maxBuyOrderTokens,
           creatorAddMarketCap: stg.config.buyPositionFilters.creatorAddMarketCap,
@@ -246,7 +217,12 @@ export default function Home() {
             />
           </Form.Item>
           <Form.Item name="purchase-order" label="Purchase Order:" valuePropName='checked'>
-            <Switch id="2" />
+            <InputNumber
+              addonAfter="count"
+              min="1"
+              step="1"
+              placeholder='type...'
+            />
           </Form.Item>
           <Form.Item label="Amount:" name="amount">
             <InputNumber
