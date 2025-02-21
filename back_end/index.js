@@ -10,7 +10,8 @@ const JsonFiles = {
 import { writeFileSync } from 'fs';
 import WebSocket from 'ws';
 import { Connection, PublicKey, clusterApiUrl, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import * as express from 'express';
+import express from 'express';
+import cors from 'cors';
 
 const contracts = {}, strategies = {}, fee = 0.000005;
 
@@ -157,6 +158,9 @@ class PumpApi {
     this.ws.send(JSON.stringify({ method: 'unsubscribeNewToken' }));
     this.ws.send(JSON.stringify({ method: 'unsubscribeTokenTrade', keys: Object.values(contracts).map((contract) => (contract.getMint())) }));
     this.setStatus('off');
+    for (const key of Object.keys(contracts)) {
+      delete contracts[key];
+    }
     console.log('[ PUMP ] ws Sleeped!');
   }
 
@@ -516,9 +520,12 @@ async function main() {
   bot(pump);
 
   const app = express()
-  const port = 1236
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  const port = 1236;
 
-  app.get('/', (req, res) => {
+  app.post('/', (req, res) => {
     const stgs = [];
     for (const strategyId of Object.keys(strategies)) {
       const stg = { id: strategyId, config: JSON.parse(JSON.stringify(strategies[strategyId])), isActive: strategies[strategyId].isActive, positions: [], resultSol: 0, };
@@ -530,34 +537,35 @@ async function main() {
     res.send(JSON.stringify({ ok: true, data: { strategies: stgs, bot: { status: pump.getStatus() } } }));
   });
 
-  app.get('/turn-off-bot', (req, res) => {
+  app.post('/turn-off-bot', (req, res) => {
     pump.handleWsSleep();
     for (let stg of Object.keys(strategies))
       stg.deActivate();
     res.json({ ok: true });
   });
 
-  app.get('/turn-on-bot', (req, res) => {
+  app.post('/turn-on-bot', (req, res) => {
     pump.handleWsWakeup();
     res.json({ ok: true });
   });
 
-  app.get('/activate-strategy/:stgId', (req, res) => {
+  app.post('/activate-strategy/:stgId', (req, res) => {
     const stgId = req.params['stgId'];
     if (!strategies[stgId]?.isActive)
       strategies[stgId]?.activate();
     res.json({ ok: true });
   });
 
-  app.get('/deactivate-strategy/:stgId', (req, res) => {
+  app.post('/deactivate-strategy/:stgId', (req, res) => {
     const stgId = req.params['stgId'];
     if (strategies[stgId]?.isActive)
       strategies[stgId]?.deActivate();
     res.json({ ok: true });
   });
 
-  app.get('/new-strategy', (req, res) => {
+  app.post('/new-strategy', (req, res) => {
     const data = req.body;
+    console.log(req);
     try {
       const stg = new Strategy(data.config);
       strategies[data.id] = stg;
@@ -567,7 +575,7 @@ async function main() {
     }
   });
 
-  app.get('/edit-strategy/:stgId', (req, res) => {
+  app.post('/edit-strategy/:stgId', (req, res) => {
     const stgId = req.params['stgId'];
     try {
       strategies[stgId]?.setConfig(data.config);
@@ -577,7 +585,7 @@ async function main() {
     }
   });
 
-  app.get('/delete-strategy/:stgId', async (req, res) => {
+  app.post('/delete-strategy/:stgId', async (req, res) => {
     const stgId = req.params['stgId'];
     try {
       await strategies[stgId]?.deActivate();

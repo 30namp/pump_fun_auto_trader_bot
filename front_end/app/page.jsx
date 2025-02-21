@@ -2,13 +2,15 @@
 
 import '@ant-design/v5-patch-for-react-19';
 
+import axios from 'axios';
+
 import { Button } from 'antd';
 import { DownOutlined, PercentageOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { message, Badge, Dropdown, Space, Table, Input, Switch, Divider, InputNumber, Drawer, Form } from 'antd';
 import { useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
 
-const SERVER_IP = '194.5.193.129';
+const SERVER_IP = '82.115.26.56';
 
 function getRandomString(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -86,7 +88,6 @@ export default function Home() {
   const [form] = Form.useForm();
 
   const [botStatus, setBotStatus] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -95,7 +96,7 @@ export default function Home() {
 
   const [strategies, setStrategies] = useState([]);
 
-  let ws = new WebSocket(`ws://${SERVER_IP}:1236`);
+  let apiUrl = `http://${SERVER_IP}:1236`;
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
@@ -108,26 +109,26 @@ export default function Home() {
       title: 'Action', key: 'operation', render: (_, record) => (
         <Space size="middle">
           <Button icon={<DeleteOutlined />} onClick={() => {
-            if (ws.readyState) {
-              ws.send(JSON.stringify({
-                query: 'delete-strategy',
-                id: record.id,
-              }));
-              messageApi.success('strategy updated!');
-            } else {
-              messageApi.error('bot is not connected!');
-            }
+            axios.post(`${apiUrl}/delete-strategy/${record.id}`).then((res) => {
+              res = res.data;
+              if (res.ok) {
+                messageApi.success('strategy deleted!');
+              } else {
+                messageApi.error('error happened!');
+                console.log(res);
+              }
+            });
           }} />
           <Switch defaultChecked={record.isActive} onClick={() => {
-            if (ws.readyState) {
-              const query = record.isActive ? 'deactivate-strategy' : 'activate-strategy';
-              ws.send(JSON.stringify({ query: query, id: record.id, }));
-              ws.send(JSON.stringify({ query: query, id: record.id, }));
-              ws.send(JSON.stringify({ query: query, id: record.id, }));
-              messageApi.success('strategy updated!');
-            } else {
-              messageApi.error('bot is not connected!');
-            }
+            axios.post(`${apiUrl}/${record.isActive ? 'deactivate-strategy' : 'activate-strategy'}/${record.id}`).then((res) => {
+              res = res.data;
+              if (res.ok) {
+                messageApi.success('strategy updated!');
+              } else {
+                messageApi.success('error happened!');
+                console.log(res);
+              }
+            });
           }} />
         </Space>
       )
@@ -136,23 +137,14 @@ export default function Home() {
 
   useEffect(() => {
 
-    ws.onopen = () => {
-      console.log('connected to bot!');
-      setWsConnected(true);
-      toast.success('connected to bot!');
-    };
+    setInterval(() => {
+      axios.post(apiUrl + '/').then((res) => {
+        res = res.data;
+        setBotStatus(res.data.bot.status);
+        setStrategies(res.data.strategies);
+      });
+    }, 1000);
 
-    ws.onmessage = (msg) => {
-      const json = msg.data;
-      const obj = JSON.parse(json);
-      setBotStatus(obj.data.bot.status == 'on' ? true : false);
-      setStrategies(obj.data.strategies);
-      console.log(obj.data);
-    };
-
-    ws.onclose = () => {
-      toast.error('bot connection loss!');
-    };
   }, []);
 
   const onStrategyFormClose = async () => {
@@ -182,28 +174,25 @@ export default function Home() {
       },
     };
 
-    if (ws.readyState) {
-      console.log(editStrategyId);
-      ws.send(JSON.stringify({
-        query: editStrategyId ? 'edit-strategy' : 'new-strategy',
+    axios({
+      method: 'post',
+      url: `${apiUrl}/${editStrategyId ? 'edit-strategy' : 'new-strategy'}/`,
+      data: {
         id: editStrategyId ?? generateStrategyId(),
-        config: strategy
-      }));
-      messageApi.open({
-        type: 'success',
-        content: 'strategy saved!',
-      });
-    } else {
-      messageApi.open({
-        type: 'error',
-        content: 'bot is not connected!',
-      });
-    }
+        config: strategy,
+      }
+    }).then((res) => {
+      res = res.data;
+      if (res.ok) {
+        messageApi.success('strategy saved!');
+      } else {
+        messageApi.success('error happened!');
+        console.log(res);
+      }
+    });
 
     onStrategyFormClose();
   }
-
-  console.log(strategies);
 
   return (
     <>
@@ -212,13 +201,16 @@ export default function Home() {
         <Button type='primary' className='self-start' onClick={() => (setShowStrategyForm(true))}>New Strategy</Button>
         <div className="flex gap-4">
           <p>Bot Status:</p>
-          <Switch value={botStatus} disabled={!wsConnected} onClick={() => {
-            if (ws) {
-              messageApi.info('changing bot status');
-              ws.send(JSON.stringify({
-                query: botStatus ? 'turn-off-bot' : 'turn-on-bot',
-              }));
-            }
+          <Switch value={botStatus == 'on'} onClick={() => {
+            axios.post(`${apiUrl}/${botStatus == 'on' ? 'turn-off-bot' : 'turn-on-bot'}/`).then((res) => {
+              res = res.data;
+              if (res.ok) {
+                messageApi.info('changing bot status');
+              } else {
+                messageApi.info('error happened!');
+                console.log(res);
+              }
+            });
           }} />
         </div>
       </div>
